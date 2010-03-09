@@ -2,12 +2,24 @@
 @import "CRSupport.j"
 
 var defaultIdentifierKey = @"id",
-    classAttributeNames  = [CPDictionary dictionary];
+    classAttributeNames  = [CPDictionary dictionary],
+    resourcePrefixes = [CPDictionary dictionary];
 
 @implementation CappuccinoResource : CPObject
 {
     CPString identifier @accessors;
 }
+
++(CPString)setResourcePrefix:(CPString)aResourcePrefix {
+  [resourcePrefixes setObject:aResourcePrefix forKey:[self className]]
+}
++(CPString)resourcePrefix {
+  if(![resourcePrefixes objectForKey:[self className]]){
+    return ""
+  }
+  return [resourcePrefixes objectForKey:[self className]];
+}
+
 
 // override this method to use a custom identifier for lookups
 + (CPString)identifierKey
@@ -19,8 +31,9 @@ var defaultIdentifierKey = @"id",
 // override this method for more complex inflections
 + (CPURL)resourcePath
 {
-    return [CPURL URLWithString:@"/" + [self railsName] + @"s"];
+    return [CPURL URLWithString: [self resourcePrefix] + @"/" + [self railsName] + @"s"];
 }
+
 
 + (CPString)railsName
 {
@@ -32,17 +45,6 @@ var defaultIdentifierKey = @"id",
     CPLog.warn('This method must be declared in your class to save properly.');
     return {};
 }
-
-// switch to this if we can get attribute types
-// + (CPDictionary)attributes
-// {
-//     var array = class_copyIvarList(self),
-//         dict  = [[CPDictionary alloc] init];
-//
-//     for (var i = 0; i < array.length; i++)
-//         [dict setObject:array[i].type forKey:array[i].name];
-//     return dict;
-// }
 
 - (CPArray)attributeNames
 {

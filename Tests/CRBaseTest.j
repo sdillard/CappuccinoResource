@@ -1,9 +1,10 @@
 @import "TestHelper.j"
 
-var userResourceJSON   = '{"user":{"id":1,"email":"test@test.com","password":"secret"}}',
-    userCollectionJSON = '[{"user":{"id":1,"email":"one@test.com"}},' +
-                          '{"user":{"id":2,"email":"two@test.com"}},' +
-                          '{"user":{"id":3,"email":"three@test.com"}}]';
+var userResourceJSON      = '{"user":{"id":1,"email":"test@test.com","password":"secret"}}',
+    userCollectionJSON    = '[{"user":{"id":1,"email":"one@test.com"}},' +
+                            '{"user":{"id":2,"email":"two@test.com"}},' +
+                            '{"user":{"id":3,"email":"three@test.com"}}]';
+var profileResourceJSON   = '{"profile":{"id":2,"user_id":1,"favorite_food":"meat"}}',
 
 
 @implementation CRBaseTest : OJTestCase
@@ -37,6 +38,15 @@ var userResourceJSON   = '{"user":{"id":1,"email":"test@test.com","password":"se
     [self assert:[CPURL URLWithString:@"/users"] equals:[User resourcePath]];
     [self assert:[CPURL URLWithString:@"/user_sessions"] equals:[UserSession resourcePath]];
 }
+
+- (void)testResourcePathForNestedResourcesScopedToClass
+{
+    [Profile setResourcePrefix:"/users/1"]
+    [BodyPart setResourcePrefix:"/body/1"]
+    [self assert:[CPURL URLWithString:@"/users/1/profiles"] equals:[Profile resourcePath]];
+    [self assert:[CPURL URLWithString:@"/body/1/body_parts"] equals:[BodyPart resourcePath]];
+}
+
 
 - (void)testAttributes
 {

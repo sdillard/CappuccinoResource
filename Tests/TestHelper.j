@@ -54,6 +54,22 @@
 
 @end
 
+@implementation Profile : CappuccinoResource
+{
+    CPString  favorite_food @accessors;
+    int       user_id       @accessors;
+}
+
+@end
+
+@implementation BodyPart : CappuccinoResource
+{
+    CPString  type     @accessors;
+}
+
+@end
+
+
 @implementation UserSession : CappuccinoResource
 {
     CPString userName  @accessors;
