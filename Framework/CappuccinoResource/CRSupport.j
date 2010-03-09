@@ -119,29 +119,11 @@
 
 @implementation CPURLConnection (CRSupport)
 
-// Works just like built-in method, but returns CPArray instead of CPData.
-// First value in array is HTTP status code, second is data string.
+//TODO replace, this method should not be used per boucher
 + (CPArray)sendSynchronousRequest:(CPURLRequest)aRequest
 {
-    try {
-        var request = objj_request_xmlhttp();
-
-        request.open([aRequest HTTPMethod], [[aRequest URL] absoluteString], NO);
-
-        var fields = [aRequest allHTTPHeaderFields],
-            key = nil,
-            keys = [fields keyEnumerator];
-
-        while (key = [keys nextObject])
-            request.setRequestHeader(key, [fields objectForKey:key]);
-
-        request.send([aRequest HTTPBody]);
-
-        return [CPArray arrayWithObjects:request.status, request.responseText];
-     }
-     catch (anException) {}
-
-     return nil;
+    var response = [CPURLConnection sendSynchronousRequest: aRequest returningResponse: nil]
+    return [CPArray arrayWithObjects:200, [response rawString]]
 }
 
 @end

@@ -177,12 +177,7 @@ var defaultIdentifierKey = @"id",
         return NO;
     }
 
-   CPLog('1');
-   CPLog(request);
     var response = [CPURLConnection sendSynchronousRequest:request];
-   CPLog('2');
-  CPLog(response[0]);
-  CPLog(response[1]);
     if (response[0] >= 400) {
         return nil;
     } else {
