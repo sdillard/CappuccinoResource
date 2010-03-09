@@ -1,4 +1,4 @@
-@import <Foundation/CPObject.j>
+import <Foundation/CPObject.j>
 @import "CRSupport.j"
 
 var defaultIdentifierKey = @"id",
@@ -175,8 +175,12 @@ var defaultIdentifierKey = @"id",
         return NO;
     }
 
+   CPLog('1');
+   CPLog(request);
     var response = [CPURLConnection sendSynchronousRequest:request];
-
+   CPLog('2');
+  CPLog(response[0]);
+  CPLog(response[1]);
     if (response[0] >= 400) {
         return nil;
     } else {
@@ -273,6 +277,7 @@ var defaultIdentifierKey = @"id",
         return nil;
     }
 
+    CPLog("path: " + path)
     var request = [CPURLRequest requestJSONWithURL:path];
     [request setHTTPMethod:@"GET"];
 
@@ -287,12 +292,15 @@ var defaultIdentifierKey = @"id",
         resourceArray    = [CPArray array],
         notificationName = [self className] + "CollectionDidLoad";
 
+ CPLog(collection)
+ CPLog(aResponse)
+ 
     for (var i = 0; i < collection.length; i++) {
         var resource = collection[i];
         var attributes = resource[[self railsName]];
         [resourceArray addObject:[self new:attributes]];
     }
-
+ CPLog('333333333333333333333333333')
     [[CPNotificationCenter defaultCenter] postNotificationName:notificationName object:self];
     return resourceArray;
 }
