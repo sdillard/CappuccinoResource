@@ -1,4 +1,4 @@
-import <Foundation/CPObject.j>
+@import <Foundation/CPObject.j>
 @import "CRSupport.j"
 
 var defaultIdentifierKey = @"id",
