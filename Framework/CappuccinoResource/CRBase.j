@@ -274,7 +274,6 @@ var defaultIdentifierKey = @"id",
         return nil;
     }
 
-    CPLog("path: " + path)
     var request = [CPURLRequest requestJSONWithURL:path];
     [request setHTTPMethod:@"GET"];
 
@@ -289,15 +288,11 @@ var defaultIdentifierKey = @"id",
         resourceArray    = [CPArray array],
         notificationName = [self className] + "CollectionDidLoad";
 
- CPLog(collection)
- CPLog(aResponse)
- 
     for (var i = 0; i < collection.length; i++) {
         var resource = collection[i];
         var attributes = resource[[self railsName]];
         [resourceArray addObject:[self new:attributes]];
     }
- CPLog('333333333333333333333333333')
     [[CPNotificationCenter defaultCenter] postNotificationName:notificationName object:self];
     return resourceArray;
 }
