@@ -328,6 +328,12 @@ var defaultIdentifierKey = @"id",
     return request;
 }
 
+//todo test
+- (CPString)toJSON{
+  return [CPString JSONFromObject:[self attributes]];  
+}
+
+
 - (void)resourceDidSave:(CPString)aResponse
 {
     var response                 = [aResponse toJSON],
@@ -380,6 +386,10 @@ var defaultIdentifierKey = @"id",
 {
     var notificationName = [self className] + "ResourceDidDestroy";
     [[CPNotificationCenter defaultCenter] postNotificationName:notificationName object:self];
+}
+
+-(BOOL)isEqual:(CappuccinoResource)other {
+  return ([self class] == [other class] && [self identifier] == [other identifier])
 }
 
 @end
