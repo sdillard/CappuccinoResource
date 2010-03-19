@@ -2,6 +2,8 @@
 @import <Foundation/CPObject.j>
 @import <OJMoq/OJMoq.j>
 @import "../Framework/CappuccinoResource/CRBase.j"
+@import "../Framework/CappuccinoResource/CRSupport.j"
+@import "../Framework/CappuccinoResource/CRFixtureFactory.j"
 
 @implementation Observer : CPObject
 {
