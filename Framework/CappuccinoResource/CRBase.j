@@ -139,9 +139,7 @@ var defaultIdentifierKey = @"id",
     if (!request) {
         return NO;
     }
-
     var response = [CPURLConnection sendSynchronousRequest:request];
-
     if (response[0] >= 400) {
         [self resourceDidNotSave:response[1]];
         return NO;
@@ -331,8 +329,8 @@ var defaultIdentifierKey = @"id",
 
 - (void)resourceDidSave:(CPString)aResponse
 {
-    var response                 = [aResponse toJSON],
-        attributes               = response[[[self class] railsName]],
+    var response                 = [aResponse toJSON];
+    var attributes               = response[[[self class] railsName]],
         abstractNotificationName = [self className] + "ResourceDidSave";
 
     if (identifier) {
@@ -387,4 +385,7 @@ var defaultIdentifierKey = @"id",
   return ([self class] == [other class] && [self identifier] == [other identifier])
 }
 
+-(BOOL)isNewRecord{
+  return ([self identifier] == null ? YES : NO)
+}
 @end
