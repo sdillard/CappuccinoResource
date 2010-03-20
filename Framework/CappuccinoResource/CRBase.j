@@ -388,4 +388,16 @@ var defaultIdentifierKey = @"id",
 -(BOOL)isNewRecord{
   return ([self identifier] == null ? YES : NO)
 }
+
+//todo only works one level :/
+-(CPString)baseClassName {
+  try {
+  if( class_getName([self superclass]) == 'CappuccinoResource')
+    return [self className]
+  return [super baseClassName]	
+  }catch(e) {
+	return class_getName([self superclass])
+  }
+}
+
 @end

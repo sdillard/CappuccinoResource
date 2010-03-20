@@ -4,6 +4,8 @@
 @import "../Framework/CappuccinoResource/CRBase.j"
 @import "../Framework/CappuccinoResource/CRSupport.j"
 @import "../Framework/CappuccinoResource/CRFixtureFactory.j"
+CPLogRegister(CPLogPrint)
+
 
 @implementation Observer : CPObject
 {
@@ -60,6 +62,12 @@
 {
     CPString  favorite_food @accessors;
     int       user_id       @accessors;
+}
+@end
+
+@implementation AwesomeProfile : Profile
+{
+    CPString  ipad @accessors;
 }
 
 @end

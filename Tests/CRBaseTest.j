@@ -327,4 +327,14 @@ var profileResourceJSON   = '{"profile":{"id":2,"user_id":1,"favorite_food":"mea
     [self assertTrue:[observer didObserve:@"UserCollectionDidLoad"]];
 }
 
+-(void)testBaseType_for_direct_decendent {
+  var profile        = [[Profile alloc] init]	
+  [self assert:'Profile' equals:[profile baseClassName]]
+}
+
+-(void)testBaseType_for_indirect_decendent {
+  var subclassOfProfile        = [[AwesomeProfile alloc] init]	
+   [self assert: 'Profile' equals:[subclassOfProfile baseClassName]]
+}
+
 @end

@@ -122,7 +122,9 @@
 //TODO replace, this method should not be used per boucher
 + (CPArray)sendSynchronousRequest:(CPURLRequest)aRequest
 {
+	CPLog("sending request " + [aRequest HTTPMethod] + " " + [aRequest URL])
     var response = [CPURLConnection sendSynchronousRequest: aRequest returningResponse: nil]
+    CPLog("got " + [response rawString] )
     return [CPArray arrayWithObjects:200, [response rawString]]
 }
 
