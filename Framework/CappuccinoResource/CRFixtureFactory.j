@@ -30,7 +30,7 @@ fixtures = nil;
 
 -(void)get:(CPString)url returns:(id)returnObject,... {
   if(arguments.length > 4){
-	var i     = 3,
+	  var i     = 3
     var array = [[CPArray alloc] init]
     var argument
 
@@ -45,7 +45,7 @@ fixtures = nil;
 
 -(void)post:(CPString)url returns:(id)returnObject,... {
   if(arguments.length > 4){
-	var i     = 3,
+	  var i     = 3
     var array = [[CPArray alloc] init]
     var argument
  
