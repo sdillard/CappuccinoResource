@@ -69,7 +69,12 @@ CPLogRegister(CPLogPrint)
 {
     CPString  ipad @accessors;
 }
+@end
 
+@implementation TotallyAwesomeProfile : AwesomeProfile
+{
+    CPString  iphone @accessors;
+}
 @end
 
 @implementation BodyPart : CappuccinoResource

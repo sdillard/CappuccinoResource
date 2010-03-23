@@ -54,31 +54,38 @@ var defaultIdentifierKey = @"id",
 
     var attributeNames = [CPArray array],
         attributes     = class_copyIvarList([self class]);
-
+      CPLog("??????????????????"+attributes)
     for (var i = 0; i < attributes.length; i++) {
         [attributeNames addObject:attributes[i].name];
     }
 
     [classAttributeNames setObject:attributeNames forKey:[self className]];
 
+    CPLog("!!!!!!!!!" + attributeNames)
     return attributeNames;
 }
 
 - (void)setAttributes:(JSObject)attributes
 {
+  CPLog('---------------------------------------------')
     for (var attribute in attributes) {
+      CPLog("--" + attribute)
         if (attribute == [[self class] identifierKey]) {
             [self setIdentifier:attributes[attribute].toString()];
         } else {
             var attributeName = [attribute cappifiedString];
+            CPLog("+++")
             if ([[self attributeNames] containsObject:attributeName]) {
                 var value = attributes[attribute];
+  
+             CPLog("--" + typeof value)            
                 /*
                  * I would much rather retrieve the ivar class than pattern match the
                  * response from Rails, but objective-j does not support this.
                 */
                 switch (typeof value) {
                     case "boolean":
+                        CPLog("bool")
                         if (value) {
                             [self setValue:YES forKey:attributeName];
                         } else {
@@ -86,6 +93,7 @@ var defaultIdentifierKey = @"id",
                         }
                         break;
                     case "number":
+                       
                         [self setValue:value forKey:attributeName];
                         break;
                     case "string":
@@ -96,6 +104,9 @@ var defaultIdentifierKey = @"id",
                             // its a datetime
                             [self setValue:[CPDate dateWithDateTimeString:value] forKey:attributeName];
                         } else {
+                CPLog("--setting " + attributeName)
+                CPLog("--to "      + value)
+
                             // its a string
                             [self setValue:value forKey:attributeName];
                         }
@@ -239,10 +250,19 @@ var defaultIdentifierKey = @"id",
 
 + (id)resourceDidLoad:(CPString)aResponse
 {
-    var response         = [aResponse toJSON],
-        attributes       = response[[self railsName]],
-        notificationName = [self className] + "ResourceDidLoad",
-        resource         = [self new];
+    var attributes = [aResponse toJSON]
+    // var attributes       = response[[self railsName]]
+    
+    var klass;
+    if(attributes['type']) {
+      klass = attributes['type']
+    }else{
+      klass = [self className]
+    }
+    
+    //todo support STI in notifications
+    var notificationName = [self className] + "ResourceDidLoad"
+    var resource         = [objj_getClass(klass) new];
 
     [resource setAttributes:attributes];
     [[CPNotificationCenter defaultCenter] postNotificationName:notificationName object:self];
@@ -282,14 +302,22 @@ var defaultIdentifierKey = @"id",
 
 + (CPArray)collectionDidLoad:(CPString)aResponse
 {
-    var collection       = [aResponse toJSON],
-        resourceArray    = [CPArray array],
-        notificationName = [self className] + "CollectionDidLoad";
+    var collection       = [aResponse toJSON]
+    var resourceArray    = [CPArray array]
+    var notificationName = [self className] + "CollectionDidLoad";
 
     for (var i = 0; i < collection.length; i++) {
-        var resource = collection[i];
-        var attributes = resource[[self railsName]];
-        [resourceArray addObject:[self new:attributes]];
+        var attributes = collection[i];
+        // var attributes = resource[[self railsName]];
+        
+        var klass;
+        if(attributes['type']) {
+          klass = attributes['type']
+        }else{
+          klass = [self className]
+        }
+
+        [resourceArray addObject:[objj_getClass(klass) new:attributes]];
     }
     [[CPNotificationCenter defaultCenter] postNotificationName:notificationName object:self];
     return resourceArray;
@@ -329,9 +357,9 @@ var defaultIdentifierKey = @"id",
 
 - (void)resourceDidSave:(CPString)aResponse
 {
-    var response                 = [aResponse toJSON];
-    var attributes               = response[[[self class] railsName]],
-        abstractNotificationName = [self className] + "ResourceDidSave";
+    var attributes               = [aResponse toJSON];
+    // var attributes               = response[[[self class] railsName]]
+    var abstractNotificationName = [self className] + "ResourceDidSave";
 
     if (identifier) {
         var notificationName = [self className] + "ResourceDidUpdate";
@@ -400,4 +428,9 @@ var defaultIdentifierKey = @"id",
   }
 }
 
+-(CPString)toFlatJSON{
+  for(var key in [self attributes]){
+    return [CPString JSONFromObject:[self attributes][key]];
+  }
+}
 @end

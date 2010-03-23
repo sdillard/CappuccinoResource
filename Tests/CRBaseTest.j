@@ -1,10 +1,10 @@
 @import "TestHelper.j"
 
-var userResourceJSON      = '{"user":{"id":1,"email":"test@test.com","password":"secret"}}',
-    userCollectionJSON    = '[{"user":{"id":1,"email":"one@test.com"}},' +
-                            '{"user":{"id":2,"email":"two@test.com"}},' +
-                            '{"user":{"id":3,"email":"three@test.com"}}]';
-var profileResourceJSON   = '{"profile":{"id":2,"user_id":1,"favorite_food":"meat"}}',
+var userResourceJSON      = '{"id":1,"email":"test@test.com","password":"secret"}',
+    userCollectionJSON    = '[{"id":1,"email":"one@test.com"},' +
+                            '{"id":2,"email":"two@test.com"},' +
+                            '{"id":3,"email":"three@test.com"}]';
+var profileResourceJSON   = '{"id":2,"user_id":1,"favorite_food":"meat"}'
 
 
 @implementation CRBaseTest : OJTestCase
@@ -22,9 +22,12 @@ var profileResourceJSON   = '{"profile":{"id":2,"user_id":1,"favorite_food":"mea
 
 - (void)tearDown
 {
+    try {
+      
     // destroy mock
     [CPURLConnection verifyThatAllExpectationsHaveBeenMet];
     CPURLConnection = oldCPURLConnection;
+   }catch(e){}
 }
 
 - (void)testIdentifierKey
@@ -45,6 +48,31 @@ var profileResourceJSON   = '{"profile":{"id":2,"user_id":1,"favorite_food":"mea
     [BodyPart setResourcePrefix:"/body/1"]
     [self assert:[CPURL URLWithString:@"/users/1/profiles"] equals:[Profile resourcePath]];
     [self assert:[CPURL URLWithString:@"/body/1/body_parts"] equals:[BodyPart resourcePath]];
+}
+
+-(void)test_STI_subclasses_get_correct_class_for_find {
+    CPURLConnection = oldCPURLConnection
+    var fixtures = [CRFixtureFactory sharedCRFixtureFactory];
+    [fixtures get:"/profiles/1" returns:'{ "id" : 1, "type": "AwesomeProfile"}']
+
+    [Profile setResourcePrefix:""]    
+    var profile = [Profile find:1]
+
+    [self assertNotNull:profile]
+    [self assert:"AwesomeProfile" equals:[profile className]]
+}
+
+-(void)test_STI_subclasses_get_correct_class_for_all {
+    CPURLConnection = oldCPURLConnection
+    var fixtures = [CRFixtureFactory sharedCRFixtureFactory];
+    [fixtures get:"/profiles" returns:'[{ "id" : 1, "type": "AwesomeProfile"}, '+
+                                       '{ "id" : 2, "type": "TotallyAwesomeProfile"}]']
+
+    [Profile setResourcePrefix:""]    
+    var profiles = [Profile all]
+
+    [self assert:"AwesomeProfile" equals:[[profiles objectAtIndex:0] className]]
+    [self assert:"TotallyAwesomeProfile" equals:[[profiles objectAtIndex:1] className]]
 }
 
 
@@ -173,6 +201,7 @@ var profileResourceJSON   = '{"profile":{"id":2,"user_id":1,"favorite_food":"mea
     var response = [201,userResourceJSON];
     [CPURLConnection selector:@selector(sendSynchronousRequest:) returns:response];
     var result = [User create:{"email":"test@test.com", "password":"secret"}];
+    [self assertNotNull:result];
     [self assert:@"1" equals:[result identifier]];
     [self assert:@"test@test.com" equals:[result email]];
     [self assert:@"secret" equals:[result password]];

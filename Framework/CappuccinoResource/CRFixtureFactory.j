@@ -69,7 +69,7 @@ fixtures = nil;
   if([anObject className] == 'CPString'){
     return anObject
   }else{
-    return [anObject toJSON]		
+    return [anObject toFlatJSON]		
   }
 }
 
@@ -86,13 +86,16 @@ fixtures = nil;
 
 + (CPArray)sendSynchronousRequest:(CPURLRequest)aRequest
 {
+    CPLog("sendSynchronousRequest")
     var fixtures = [CRFixtureFactory sharedCRFixtureFactory];
     var url      = [aRequest URL];
     var method   = [aRequest HTTPMethod];
+
+    CPLog(method + " " + url)
+
     var response = [fixtures findByUrl:url method:method]
 
-    // CPLog(method + " " + url)
-    // CPLog("response " + response)
+    CPLog("response " + response)
     
     if(response){
       return [CPArray arrayWithObjects:200,response];      
@@ -105,10 +108,10 @@ fixtures = nil;
 
 @implementation CPArray (JSON)
 
--(CPString)toJSON {
+-(CPString)toFlatJSON {
   var stringArray = [CPArray array];
   for (var i = 0; i < [self count]; i++) {
-    [stringArray addObject:[[self objectAtIndex:i] toJSON]];
+    [stringArray addObject:[[self objectAtIndex:i] toFlatJSON]];
   }
   return "[" + [stringArray componentsJoinedByString:","] + "]"
 }
