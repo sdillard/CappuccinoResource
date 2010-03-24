@@ -58,6 +58,21 @@ fixtures = nil;
   [self storeUrl:url method:"POST" returns:returnObject];
 }
 
+-(void)delete:(CPString)url returns:(id)returnObject,... {
+  if(arguments.length > 4){
+	  var i     = 3
+    var array = [[CPArray alloc] init]
+    var argument
+ 
+    for(; i < arguments.length && (argument = arguments[i]) != nil; ++i)
+         array.push(argument)
+    
+     returnObject = array
+  }
+
+  [self storeUrl:url method:"DELETE" returns:returnObject];
+}
+
 // "private"
 -(void)storeUrl:(CPString)url method:method returns:(id)returnObject {	
 
