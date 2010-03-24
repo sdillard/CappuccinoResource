@@ -46,6 +46,9 @@ var defaultIdentifierKey = @"id",
     return {};
 }
 
+-(void)resourceHasLoaded {
+}
+
 - (CPArray)attributeNames
 {
     if ([classAttributeNames objectForKey:[self className]]) {
@@ -54,38 +57,31 @@ var defaultIdentifierKey = @"id",
 
     var attributeNames = [CPArray array],
         attributes     = class_copyIvarList([self class]);
-      CPLog("??????????????????"+attributes)
     for (var i = 0; i < attributes.length; i++) {
         [attributeNames addObject:attributes[i].name];
     }
 
     [classAttributeNames setObject:attributeNames forKey:[self className]];
 
-    CPLog("!!!!!!!!!" + attributeNames)
     return attributeNames;
 }
 
 - (void)setAttributes:(JSObject)attributes
 {
-  CPLog('---------------------------------------------')
     for (var attribute in attributes) {
-      CPLog("--" + attribute)
         if (attribute == [[self class] identifierKey]) {
             [self setIdentifier:attributes[attribute].toString()];
         } else {
             var attributeName = [attribute cappifiedString];
-            CPLog("+++")
             if ([[self attributeNames] containsObject:attributeName]) {
                 var value = attributes[attribute];
   
-             CPLog("--" + typeof value)            
                 /*
                  * I would much rather retrieve the ivar class than pattern match the
                  * response from Rails, but objective-j does not support this.
                 */
                 switch (typeof value) {
                     case "boolean":
-                        CPLog("bool")
                         if (value) {
                             [self setValue:YES forKey:attributeName];
                         } else {
@@ -104,9 +100,6 @@ var defaultIdentifierKey = @"id",
                             // its a datetime
                             [self setValue:[CPDate dateWithDateTimeString:value] forKey:attributeName];
                         } else {
-                CPLog("--setting " + attributeName)
-                CPLog("--to "      + value)
-
                             // its a string
                             [self setValue:value forKey:attributeName];
                         }
@@ -265,6 +258,7 @@ var defaultIdentifierKey = @"id",
     var resource         = [objj_getClass(klass) new];
 
     [resource setAttributes:attributes];
+    [resource resourceHasLoaded]
     [[CPNotificationCenter defaultCenter] postNotificationName:notificationName object:self];
     return resource;
 }
@@ -317,7 +311,10 @@ var defaultIdentifierKey = @"id",
           klass = [self className]
         }
 
-        [resourceArray addObject:[objj_getClass(klass) new:attributes]];
+        var resource = [objj_getClass(klass) new:attributes];
+        [resource resourceHasLoaded]
+        [resourceArray addObject:resource];
+        
     }
     [[CPNotificationCenter defaultCenter] postNotificationName:notificationName object:self];
     return resourceArray;
