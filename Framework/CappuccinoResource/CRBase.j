@@ -104,6 +104,20 @@ var defaultIdentifierKey = @"id",
                             [self setValue:value forKey:attributeName];
                         }
                         break;
+	                case "object":
+	                   // array
+					   if(value.length != null){
+					      var included      = [];
+					      var includedClass = objj_getClass([attribute classifiedString]);
+					
+    					  for (var i = 0; i < value.length; i++) {
+					        var newObject = [includedClass new:[value objectAtIndex:i]]
+					        [included addObject:newObject]
+					      }
+					      [self setValue:included forKey:attributeName];
+					   }
+	                   break;
+
                 }
             }
         }

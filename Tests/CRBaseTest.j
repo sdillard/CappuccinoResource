@@ -4,6 +4,7 @@ var userResourceJSON      = '{"id":1,"email":"test@test.com","password":"secret"
     userCollectionJSON    = '[{"id":1,"email":"one@test.com"},' +
                             '{"id":2,"email":"two@test.com"},' +
                             '{"id":3,"email":"three@test.com"}]';
+var userWithProfilesJSON  = '{"id":7,"email":"three@test.com", "profiles": [{"id":2,"user_id":7,"favorite_food":"meat"}, {"id":3,"user_id":7,"favorite_food":"chard"}] }'
 var profileResourceJSON   = '{"id":2,"user_id":1,"favorite_food":"meat"}'
 
 
@@ -50,6 +51,22 @@ var profileResourceJSON   = '{"id":2,"user_id":1,"favorite_food":"meat"}'
     [self assert:[CPURL URLWithString:@"/body/1/body_parts"] equals:[BodyPart resourcePath]];
 }
 
+-(void)test_instantiates_and_assigns_included_arrays_of_related_objects {
+    CPURLConnection = oldCPURLConnection
+    var fixtures = [CRFixtureFactory sharedCRFixtureFactory];
+    [fixtures get:"/users/7" returns:userWithProfilesJSON]
+
+    user = [User find:7]
+
+    [self assertNotNull:[user profiles]]
+    [self assert:2 equals:[[user profiles] count]]
+
+    profile = [[user profiles] objectAtIndex:1]
+    [self assert:"chard" equals:[profile favoriteFood]]
+}
+
+
+
 -(void)test_STI_subclasses_get_correct_class_for_find {
     CPURLConnection = oldCPURLConnection
     var fixtures = [CRFixtureFactory sharedCRFixtureFactory];
@@ -87,7 +104,7 @@ var profileResourceJSON   = '{"id":2,"user_id":1,"favorite_food":"meat"}'
 
 - (void)testAttributeNames
 {
-    [self assert:["email","password","age","isAlive"] equals:[user attributeNames]];
+    [self assert:["email","password","age","isAlive", "profiles"] equals:[user attributeNames]];
     [self assert:["userName","startDate"] equals:[session attributeNames]];
 }
 
@@ -365,5 +382,5 @@ var profileResourceJSON   = '{"id":2,"user_id":1,"favorite_food":"meat"}'
   var subclassOfProfile        = [[AwesomeProfile alloc] init]	
    [self assert: 'Profile' equals:[subclassOfProfile baseClassName]]
 }
-
+ 
 @end

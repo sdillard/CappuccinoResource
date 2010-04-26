@@ -49,6 +49,7 @@ CPLogRegister(CPLogPrint)
     CPString  password    @accessors;
     int       age         @accessors;
     BOOL      isAlive     @accessors;
+    CPArray   profiles    @accessors;
 }
 
 - (JSObject)attributes
@@ -60,8 +61,8 @@ CPLogRegister(CPLogPrint)
 
 @implementation Profile : CappuccinoResource
 {
-    CPString  favorite_food @accessors;
-    int       user_id       @accessors;
+    CPString  favoriteFood @accessors;
+    int       userId       @accessors;
 }
 @end
 

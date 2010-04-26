@@ -84,6 +84,16 @@
     return str;
 }
 
+- (CPString)classifiedString
+{
+    var str=self;
+    var upCase  = new RegExp('([ABCDEFGHIJKLMNOPQRSTUVWXYZ])','g');
+    var stripS  = new RegExp('s$');
+   
+    var newStr = str.replace(stripS,'');
+    return newStr.charAt(0).toUpperCase() + newStr.substring(1);
+}
+
 /*
  * Cappuccino expects strings to be camelized with a lowercased first letter.
  * eg - userSession, movieTitle, createdAt, etc.
