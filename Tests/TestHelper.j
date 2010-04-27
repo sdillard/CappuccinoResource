@@ -61,8 +61,9 @@ CPLogRegister(CPLogPrint)
 
 @implementation Profile : CappuccinoResource
 {
-    CPString  favoriteFood @accessors;
-    int       userId       @accessors;
+    CPString  favoriteFood      @accessors;
+    int       userId            @accessors;
+    CPStringh intentionallyNull @accessors;
 }
 @end
 

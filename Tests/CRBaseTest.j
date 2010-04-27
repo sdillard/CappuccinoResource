@@ -4,7 +4,7 @@ var userResourceJSON      = '{"id":1,"email":"test@test.com","password":"secret"
     userCollectionJSON    = '[{"id":1,"email":"one@test.com"},' +
                             '{"id":2,"email":"two@test.com"},' +
                             '{"id":3,"email":"three@test.com"}]';
-var userWithProfilesJSON  = '{"id":7,"email":"three@test.com", "profiles": [{"id":2,"user_id":7,"favorite_food":"meat"}, {"id":3,"user_id":7,"favorite_food":"chard"}] }'
+var userWithProfilesJSON  = '{"id":7,"email":"three@test.com", "profiles": [{"id":2,"user_id":7,"favorite_food":"meat","intentionally_null":null}, {"id":3,"user_id":7,"favorite_food":"chard","intentionally_null":null}] }'
 var profileResourceJSON   = '{"id":2,"user_id":1,"favorite_food":"meat"}'
 
 
@@ -63,6 +63,7 @@ var profileResourceJSON   = '{"id":2,"user_id":1,"favorite_food":"meat"}'
 
     profile = [[user profiles] objectAtIndex:1]
     [self assert:"chard" equals:[profile favoriteFood]]
+	[self assertNull: [profile intentionallyNull]]
 }
 
 

@@ -75,50 +75,51 @@ var defaultIdentifierKey = @"id",
             var attributeName = [attribute cappifiedString];
             if ([[self attributeNames] containsObject:attributeName]) {
                 var value = attributes[attribute];
-  
-                /*
-                 * I would much rather retrieve the ivar class than pattern match the
-                 * response from Rails, but objective-j does not support this.
-                */
-                switch (typeof value) {
-                    case "boolean":
-                        if (value) {
-                            [self setValue:YES forKey:attributeName];
-                        } else {
-                            [self setValue:NO forKey:attributeName];
-                        }
-                        break;
-                    case "number":
-                       
-                        [self setValue:value forKey:attributeName];
-                        break;
-                    case "string":
-                        if (value.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                            // its a date
-                            [self setValue:[CPDate dateWithDateString:value] forKey:attributeName];
-                        } else if (value.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/)) {
-                            // its a datetime
-                            [self setValue:[CPDate dateWithDateTimeString:value] forKey:attributeName];
-                        } else {
-                            // its a string
-                            [self setValue:value forKey:attributeName];
-                        }
-                        break;
-	                case "object":
-	                   // array
-					   if(value.length != null){
-					      var included      = [];
-					      var includedClass = objj_getClass([attribute classifiedString]);
-					
-    					  for (var i = 0; i < value.length; i++) {
-					        var newObject = [includedClass new:[value objectAtIndex:i]]
-					        [included addObject:newObject]
-					      }
-					      [self setValue:included forKey:attributeName];
-					   }
-	                   break;
+  				if(value != null) {
+	                /*
+	                 * I would much rather retrieve the ivar class than pattern match the
+	                 * response from Rails, but objective-j does not support this.
+	                */
+	                switch (typeof value) {
+	                    case "boolean":
+	                        if (value) {
+	                            [self setValue:YES forKey:attributeName];
+	                        } else {
+	                            [self setValue:NO forKey:attributeName];
+	                        }
+	                        break;
+	                    case "number":
+                      
+	                        [self setValue:value forKey:attributeName];
+	                        break;
+	                    case "string":
+	                        if (value.match(/^\d{4}-\d{2}-\d{2}$/)) {
+	                            // its a date
+	                            [self setValue:[CPDate dateWithDateString:value] forKey:attributeName];
+	                        } else if (value.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/)) {
+	                            // its a datetime
+	                            [self setValue:[CPDate dateWithDateTimeString:value] forKey:attributeName];
+	                        } else {
+	                            // its a string
+	                            [self setValue:value forKey:attributeName];
+	                        }
+	                        break;
+		                case "object":
+		                   // array
+						   if(value.length != null){
+						      var included      = [];
+						      var includedClass = objj_getClass([attribute classifiedString]);
+				
+	    					  for (var i = 0; i < value.length; i++) {
+						        var newObject = [includedClass new:[value objectAtIndex:i]]
+						        [included addObject:newObject]
+						      }
+						      [self setValue:included forKey:attributeName];
+						   }
+		                   break;
 
-                }
+	                }
+				}
             }
         }
     }
