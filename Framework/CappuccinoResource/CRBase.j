@@ -89,7 +89,7 @@ var defaultIdentifierKey = @"id",
 	                        }
 	                        break;
 	                    case "number":
-                      
+
 	                        [self setValue:value forKey:attributeName];
 	                        break;
 	                    case "string":
@@ -109,7 +109,7 @@ var defaultIdentifierKey = @"id",
 						   if(value.length != null){
 						      var included      = [];
 						      var includedClass = objj_getClass([attribute classifiedString]);
-				
+
 	    					  for (var i = 0; i < value.length; i++) {
 						        var newObject = [includedClass new:[value objectAtIndex:i]]
 						        [included addObject:newObject]
@@ -260,14 +260,14 @@ var defaultIdentifierKey = @"id",
 {
     var attributes = [aResponse toJSON]
     // var attributes       = response[[self railsName]]
-    
+
     var klass;
     if(attributes['type']) {
       klass = attributes['type']
     }else{
       klass = [self className]
     }
-    
+
     //todo support STI in notifications
     var notificationName = [self className] + "ResourceDidLoad"
     var resource         = [objj_getClass(klass) new];
@@ -318,7 +318,7 @@ var defaultIdentifierKey = @"id",
     for (var i = 0; i < collection.length; i++) {
         var attributes = collection[i];
         // var attributes = resource[[self railsName]];
-        
+
         var klass;
         if(attributes['type']) {
           klass = attributes['type']
@@ -329,7 +329,7 @@ var defaultIdentifierKey = @"id",
         var resource = [objj_getClass(klass) new:attributes];
         [resource resourceHasLoaded]
         [resourceArray addObject:resource];
-        
+
     }
     [[CPNotificationCenter defaultCenter] postNotificationName:notificationName object:self];
     return resourceArray;
@@ -363,7 +363,7 @@ var defaultIdentifierKey = @"id",
 
 //todo test
 - (CPString)toJSON{
-  return [CPString JSONFromObject:[self attributes]];  
+  return [CPString JSONFromObject:[self attributes]];
 }
 
 
@@ -434,7 +434,7 @@ var defaultIdentifierKey = @"id",
   try {
   if( class_getName([self superclass]) == 'CappuccinoResource')
     return [self className]
-  return [super baseClassName]	
+  return [super baseClassName]
   }catch(e) {
 	return class_getName([self superclass])
   }
