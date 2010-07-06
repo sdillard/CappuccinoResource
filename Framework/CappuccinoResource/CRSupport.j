@@ -98,7 +98,7 @@
 {
     var string = [self camelcaseUnderscores]
     var stripS  = new RegExp('s$');
-   
+
     var newStr = string.replace(stripS,'');
     return newStr.charAt(0).toUpperCase() + newStr.substring(1);
 }
@@ -133,13 +133,29 @@
 
 @implementation CPURLConnection (CRSupport)
 
-//TODO replace, this method should not be used per boucher
+// Works just like built-in method, but returns CPArray instead of CPData.
+// First value in array is HTTP status code, second is data string.
 + (CPArray)sendSynchronousRequest:(CPURLRequest)aRequest
 {
-	  CPLog("sending request " + [aRequest HTTPMethod] + " " + [aRequest URL])
-    var response = [CPURLConnection sendSynchronousRequest: aRequest returningResponse: nil]
-    CPLog("got " + [response rawString] )
-    return [CPArray arrayWithObjects:200, [response rawString]]
+    try {
+        var request = new CFHTTPRequest();
+
+        request.open([aRequest HTTPMethod], [[aRequest URL] absoluteString], NO);
+
+        var fields = [aRequest allHTTPHeaderFields],
+            key = nil,
+            keys = [fields keyEnumerator];
+
+        while (key = [keys nextObject])
+            request.setRequestHeader(key, [fields objectForKey:key]);
+
+        request.send([aRequest HTTPBody]);
+
+        return [CPArray arrayWithObjects:request.status(), request.responseText()];
+     }
+     catch (anException) {}
+
+     return nil;
 }
 
 @end
