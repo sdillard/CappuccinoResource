@@ -162,6 +162,7 @@ var defaultIdentifierKey = @"id",
 
 - (BOOL)save
 {
+    // Keep in sync with CappuccinoResource save in TestHelper.j
     var request = [self resourceWillSave];
 
     if (!request) {
