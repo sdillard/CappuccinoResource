@@ -168,7 +168,10 @@ var defaultIdentifierKey = @"id",
         return NO;
     }
     var response = [CPURLConnection sendSynchronousRequest:request];
-    if (response[0] >= 400) {
+    if (response[0] == 409){
+        [self resourceDidNotSaveConflicted:response[1]];
+        return NO;
+    } else if (response[0] >= 400) {
         [self resourceDidNotSave:response[1]];
         return NO;
     } else {
@@ -389,6 +392,20 @@ var defaultIdentifierKey = @"id",
     }
 
     [self setAttributes:attributes];
+    [[CPNotificationCenter defaultCenter] postNotificationName:notificationName object:self];
+    [[CPNotificationCenter defaultCenter] postNotificationName:abstractNotificationName object:self];
+}
+
+- (void)resourceDidNotSaveConflicted:(CPString)aResponse
+{
+    var abstractNotificationName = [self className] + "ResourceDidNotSaveConflicted";
+    // TODO - do something with errors
+    if (identifier) {
+        var notificationName = [self className] + "ResourceDidNotUpdateConflicted";
+    } else {
+        var notificationName = [self className] + "ResourceDidNotCreateConflicted";
+    }
+
     [[CPNotificationCenter defaultCenter] postNotificationName:notificationName object:self];
     [[CPNotificationCenter defaultCenter] postNotificationName:abstractNotificationName object:self];
 }

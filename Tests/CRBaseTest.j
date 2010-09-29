@@ -201,6 +201,17 @@ var profileResourceJSON   = '{"id":2,"user_id":1,"favorite_food":"meat"}'
     [self assertTrue:[observer didObserve:@"UserResourceDidCreate"]];
 }
 
+- (void)testFailedSaveWithNewResourceConflicted
+{
+    [observer startObserving:@"UserResourceDidNotSaveConflicted"];
+    [observer startObserving:@"UserResourceDidNotCreateConflicted"];
+    var response = [409, [""]];
+    [CPURLConnection selector:@selector(sendSynchronousRequest:) returns:response];
+    [self assertFalse:[user save]];
+    [self assertTrue:[observer didObserve:@"UserResourceDidNotSaveConflicted"]];
+    [self assertTrue:[observer didObserve:@"UserResourceDidNotCreateConflicted"]];
+}
+
 - (void)testFailedSaveWithNewResource
 {
     [observer startObserving:@"UserResourceDidNotSave"];
