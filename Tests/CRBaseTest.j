@@ -1,9 +1,11 @@
 @import "TestHelper.j"
 
-var userResourceJSON   = '{"user":{"id":1,"email":"test@test.com","password":"secret"}}',
-    userCollectionJSON = '[{"user":{"id":1,"email":"one@test.com"}},' +
-                          '{"user":{"id":2,"email":"two@test.com"}},' +
-                          '{"user":{"id":3,"email":"three@test.com"}}]';
+var userResourceJSON      = '{"id":1,"email":"test@test.com","password":"secret"}',
+    userCollectionJSON    = '[{"id":1,"email":"one@test.com"},' +
+                            '{"id":2,"email":"two@test.com"},' +
+                            '{"id":3,"email":"three@test.com"}]';
+var userWithProfilesJSON  = '{"id":7,"email":"three@test.com", "profiles": [{"id":2,"user_id":7,"favorite_food":"meat","intentionally_null":null}, {"id":3,"user_id":7,"favorite_food":"chard","intentionally_null":null}] }'
+var profileResourceJSON   = '{"id":2,"user_id":1,"favorite_food":"meat"}'
 
 
 @implementation CRBaseTest : OJTestCase
@@ -21,9 +23,12 @@ var userResourceJSON   = '{"user":{"id":1,"email":"test@test.com","password":"se
 
 - (void)tearDown
 {
+    try {
+      
     // destroy mock
     [CPURLConnection verifyThatAllExpectationsHaveBeenMet];
     CPURLConnection = oldCPURLConnection;
+   }catch(e){}
 }
 
 - (void)testIdentifierKey
@@ -38,6 +43,57 @@ var userResourceJSON   = '{"user":{"id":1,"email":"test@test.com","password":"se
     [self assert:[CPURL URLWithString:@"/user_sessions"] equals:[UserSession resourcePath]];
 }
 
+- (void)testResourcePathForNestedResourcesScopedToClass
+{
+    [Profile setResourcePrefix:"/users/1"]
+    [BodyPart setResourcePrefix:"/body/1"]
+    [self assert:[CPURL URLWithString:@"/users/1/profiles"] equals:[Profile resourcePath]];
+    [self assert:[CPURL URLWithString:@"/body/1/body_parts"] equals:[BodyPart resourcePath]];
+}
+
+-(void)test_instantiates_and_assigns_included_arrays_of_related_objects {
+    CPURLConnection = oldCPURLConnection
+    var fixtures = [CRFixtureFactory sharedCRFixtureFactory];
+    [fixtures get:"/users/7" returns:userWithProfilesJSON]
+
+    user = [User find:7]
+
+    [self assertNotNull:[user profiles]]
+    [self assert:2 equals:[[user profiles] count]]
+
+    profile = [[user profiles] objectAtIndex:1]
+    [self assert:"chard" equals:[profile favoriteFood]]
+	[self assertNull: [profile intentionallyNull]]
+}
+
+
+
+-(void)test_STI_subclasses_get_correct_class_for_find {
+    CPURLConnection = oldCPURLConnection
+    var fixtures = [CRFixtureFactory sharedCRFixtureFactory];
+    [fixtures get:"/profiles/1" returns:'{ "id" : 1, "type": "AwesomeProfile"}']
+
+    [Profile setResourcePrefix:""]    
+    var profile = [Profile find:1]
+
+    [self assertNotNull:profile]
+    [self assert:"AwesomeProfile" equals:[profile className]]
+}
+
+-(void)test_STI_subclasses_get_correct_class_for_all {
+    CPURLConnection = oldCPURLConnection
+    var fixtures = [CRFixtureFactory sharedCRFixtureFactory];
+    [fixtures get:"/profiles" returns:'[{ "id" : 1, "type": "AwesomeProfile"}, '+
+                                       '{ "id" : 2, "type": "TotallyAwesomeProfile"}]']
+
+    [Profile setResourcePrefix:""]    
+    var profiles = [Profile all]
+
+    [self assert:"AwesomeProfile" equals:[[profiles objectAtIndex:0] className]]
+    [self assert:"TotallyAwesomeProfile" equals:[[profiles objectAtIndex:1] className]]
+}
+
+
 - (void)testAttributes
 {
     var expected = '{"email":"test@test.com","password":"secret","age":27}';
@@ -49,7 +105,7 @@ var userResourceJSON   = '{"user":{"id":1,"email":"test@test.com","password":"se
 
 - (void)testAttributeNames
 {
-    [self assert:["email","password","age","isAlive"] equals:[user attributeNames]];
+    [self assert:["email","password","age","isAlive", "profiles"] equals:[user attributeNames]];
     [self assert:["userName","startDate"] equals:[session attributeNames]];
 }
 
@@ -145,6 +201,17 @@ var userResourceJSON   = '{"user":{"id":1,"email":"test@test.com","password":"se
     [self assertTrue:[observer didObserve:@"UserResourceDidCreate"]];
 }
 
+- (void)testFailedSaveWithNewResourceConflicted
+{
+    [observer startObserving:@"UserResourceDidNotSaveConflicted"];
+    [observer startObserving:@"UserResourceDidNotCreateConflicted"];
+    var response = [409, [""]];
+    [CPURLConnection selector:@selector(sendSynchronousRequest:) returns:response];
+    [self assertFalse:[user save]];
+    [self assertTrue:[observer didObserve:@"UserResourceDidNotSaveConflicted"]];
+    [self assertTrue:[observer didObserve:@"UserResourceDidNotCreateConflicted"]];
+}
+
 - (void)testFailedSaveWithNewResource
 {
     [observer startObserving:@"UserResourceDidNotSave"];
@@ -163,6 +230,7 @@ var userResourceJSON   = '{"user":{"id":1,"email":"test@test.com","password":"se
     var response = [201,userResourceJSON];
     [CPURLConnection selector:@selector(sendSynchronousRequest:) returns:response];
     var result = [User create:{"email":"test@test.com", "password":"secret"}];
+    [self assertNotNull:result];
     [self assert:@"1" equals:[result identifier]];
     [self assert:@"test@test.com" equals:[result email]];
     [self assert:@"secret" equals:[result password]];
@@ -322,4 +390,14 @@ var userResourceJSON   = '{"user":{"id":1,"email":"test@test.com","password":"se
     [self assertTrue:[observer didObserve:@"UserCollectionDidLoad"]];
 }
 
+-(void)testBaseType_for_direct_decendent {
+  var profile        = [[Profile alloc] init]	
+  [self assert:'Profile' equals:[profile baseClassName]]
+}
+
+-(void)testBaseType_for_indirect_decendent {
+  var subclassOfProfile        = [[AwesomeProfile alloc] init]	
+   [self assert: 'Profile' equals:[subclassOfProfile baseClassName]]
+}
+ 
 @end

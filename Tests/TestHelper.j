@@ -2,6 +2,10 @@
 @import <Foundation/CPObject.j>
 @import <OJMoq/OJMoq.j>
 @import "../Framework/CappuccinoResource/CRBase.j"
+@import "../Framework/CappuccinoResource/CRSupport.j"
+@import "../Framework/CappuccinoResource/CRFixtureFactory.j"
+CPLogRegister(CPLogPrint)
+
 
 @implementation Observer : CPObject
 {
@@ -45,6 +49,7 @@
     CPString  password    @accessors;
     int       age         @accessors;
     BOOL      isAlive     @accessors;
+    CPArray   profiles    @accessors;
 }
 
 - (JSObject)attributes
@@ -53,6 +58,34 @@
 }
 
 @end
+
+@implementation Profile : CappuccinoResource
+{
+    CPString  favoriteFood      @accessors;
+    int       userId            @accessors;
+    CPStringh intentionallyNull @accessors;
+}
+@end
+
+@implementation AwesomeProfile : Profile
+{
+    CPString  ipad @accessors;
+}
+@end
+
+@implementation TotallyAwesomeProfile : AwesomeProfile
+{
+    CPString  iphone @accessors;
+}
+@end
+
+@implementation BodyPart : CappuccinoResource
+{
+    CPString  type     @accessors;
+}
+
+@end
+
 
 @implementation UserSession : CappuccinoResource
 {

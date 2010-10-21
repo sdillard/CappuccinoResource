@@ -10,12 +10,27 @@
     [self assert:@"happy_birth_day" equals:[[CPString stringWithString:@"HappyBirthDay"] railsifiedString]];
 }
 
+- (void)testCPStringCamelcaseUnderscores
+{
+    [self assert:@"movies"        equals:[[CPString stringWithString:@"movies"]          camelcaseUnderscores]];
+    [self assert:@"movieTitles"   equals:[[CPString stringWithString:@"movie_titles"]    camelcaseUnderscores]];
+    [self assert:@"MovieTitles"   equals:[[CPString stringWithString:@"Movie_titles"]    camelcaseUnderscores]];
+    [self assert:@"happyBirthDay" equals:[[CPString stringWithString:@"happy_birth_day"] camelcaseUnderscores]];
+    [self assert:@"happyBirthDay" equals:[[CPString stringWithString:@"happyBirthDay"]   camelcaseUnderscores]];
+}
+
 - (void)testCPStringCappifiedString
 {
-    [self assert:@"movies" equals:[[CPString stringWithString:@"Movies"] cappifiedString]];
-    [self assert:@"movieTitles" equals:[[CPString stringWithString:@"movie_titles"] cappifiedString]];
+    [self assert:@"movies"        equals:[[CPString stringWithString:@"Movies"]          cappifiedString]];
+    [self assert:@"movieTitles"   equals:[[CPString stringWithString:@"movie_titles"]    cappifiedString]];
     [self assert:@"happyBirthDay" equals:[[CPString stringWithString:@"happy_birth_day"] cappifiedString]];
-    [self assert:@"happyBirthDay" equals:[[CPString stringWithString:@"happyBirthDay"] cappifiedString]];
+    [self assert:@"happyBirthDay" equals:[[CPString stringWithString:@"happyBirthDay"]   cappifiedString]];
+}
+
+- (void)testCPStringClassifiedString
+{
+    [self assert:@"Movie"        equals:[[CPString stringWithString:@"movies"]          classifiedString]];
+    [self assert:@"MovieTitle"   equals:[[CPString stringWithString:@"movie_titles"]    classifiedString]];
 }
 
 - (void)testCPStringToJSONWithSingleObject

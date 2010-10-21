@@ -2,12 +2,24 @@
 @import "CRSupport.j"
 
 var defaultIdentifierKey = @"id",
-    classAttributeNames  = [CPDictionary dictionary];
+    classAttributeNames  = [CPDictionary dictionary],
+    resourcePrefixes = [CPDictionary dictionary];
 
 @implementation CappuccinoResource : CPObject
 {
     CPString identifier @accessors;
 }
+
++(CPString)setResourcePrefix:(CPString)aResourcePrefix {
+  [resourcePrefixes setObject:aResourcePrefix forKey:[self className]]
+}
++(CPString)resourcePrefix {
+  if(![resourcePrefixes objectForKey:[self className]]){
+    return ""
+  }
+  return [resourcePrefixes objectForKey:[self className]];
+}
+
 
 // override this method to use a custom identifier for lookups
 + (CPString)identifierKey
@@ -19,8 +31,9 @@ var defaultIdentifierKey = @"id",
 // override this method for more complex inflections
 + (CPURL)resourcePath
 {
-    return [CPURL URLWithString:@"/" + [self railsName] + @"s"];
+    return [CPURL URLWithString: [self resourcePrefix] + @"/" + [self railsName] + @"s"];
 }
+
 
 + (CPString)railsName
 {
@@ -33,16 +46,8 @@ var defaultIdentifierKey = @"id",
     return {};
 }
 
-// switch to this if we can get attribute types
-// + (CPDictionary)attributes
-// {
-//     var array = class_copyIvarList(self),
-//         dict  = [[CPDictionary alloc] init];
-//
-//     for (var i = 0; i < array.length; i++)
-//         [dict setObject:array[i].type forKey:array[i].name];
-//     return dict;
-// }
+-(void)resourceHasLoaded {
+}
 
 - (CPArray)attributeNames
 {
@@ -52,7 +57,6 @@ var defaultIdentifierKey = @"id",
 
     var attributeNames = [CPArray array],
         attributes     = class_copyIvarList([self class]);
-
     for (var i = 0; i < attributes.length; i++) {
         [attributeNames addObject:attributes[i].name];
     }
@@ -71,33 +75,59 @@ var defaultIdentifierKey = @"id",
             var attributeName = [attribute cappifiedString];
             if ([[self attributeNames] containsObject:attributeName]) {
                 var value = attributes[attribute];
-                /*
-                 * I would much rather retrieve the ivar class than pattern match the
-                 * response from Rails, but objective-j does not support this.
-                */
-                switch (typeof value) {
-                    case "boolean":
-                        if (value) {
-                            [self setValue:YES forKey:attributeName];
-                        } else {
-                            [self setValue:NO forKey:attributeName];
-                        }
-                        break;
-                    case "number":
-                        [self setValue:value forKey:attributeName];
-                        break;
-                    case "string":
-                        if (value.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                            // its a date
-                            [self setValue:[CPDate dateWithDateString:value] forKey:attributeName];
-                        } else if (value.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/)) {
-                            // its a datetime
-                            [self setValue:[CPDate dateWithDateTimeString:value] forKey:attributeName];
-                        } else {
-                            // its a string
+                  if(value != null) {
+                    /*
+                     * I would much rather retrieve the ivar class than pattern match the
+                     * response from Rails, but objective-j does not support this.
+                    */
+                    switch (typeof value) {
+                        case "boolean":
+                            if (value) {
+                                [self setValue:YES forKey:attributeName];
+                            } else {
+                                [self setValue:NO forKey:attributeName];
+                            }
+                            break;
+                        case "number":
                             [self setValue:value forKey:attributeName];
-                        }
-                        break;
+                            break;
+                        case "string":
+                            if (value.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                                // its a date
+                                [self setValue:[CPDate dateWithDateString:value] forKey:attributeName];
+                            } else if (value.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/)) {
+                                // its a datetime
+                                [self setValue:[CPDate dateWithDateTimeString:value] forKey:attributeName];
+                            } else {
+                                // its a string
+                                [self setValue:value forKey:attributeName];
+                            }
+                            break;
+                        case "object":
+                           // array
+                           if (value.length != null) {
+                                var includedClass = objj_getClass([attribute classifiedString]);
+
+                                if (includedClass != null) {
+                                    var included = [];
+                                    for (var i = 0; i < value.length; i++) {
+                                        var newObject;
+                                        var nestedValue = [value objectAtIndex:i];
+                                        // In Test the nested attribute hashes can be strings
+                                        if (typeof nestedValue == "string") {
+                                            newObject = [includedClass new:JSON.parse(nestedValue)]
+                                        } else {
+                                            newObject = [includedClass new:nestedValue]
+                                        }
+                                        [included addObject:newObject]
+                                    }
+                                    [self setValue:included forKey:attributeName];
+                                } else {
+                                    [self setValue:value forKey:attributeName];
+                                }
+                           }
+                           break;
+                    }
                 }
             }
         }
@@ -137,10 +167,11 @@ var defaultIdentifierKey = @"id",
     if (!request) {
         return NO;
     }
-
     var response = [CPURLConnection sendSynchronousRequest:request];
-
-    if (response[0] >= 400) {
+    if (response[0] == 409){
+        [self resourceDidNotSaveConflicted:response[1]];
+        return NO;
+    } else if (response[0] >= 400) {
         [self resourceDidNotSave:response[1]];
         return NO;
     } else {
@@ -176,7 +207,6 @@ var defaultIdentifierKey = @"id",
     }
 
     var response = [CPURLConnection sendSynchronousRequest:request];
-
     if (response[0] >= 400) {
         return nil;
     } else {
@@ -245,13 +275,23 @@ var defaultIdentifierKey = @"id",
 
 + (id)resourceDidLoad:(CPString)aResponse
 {
-    var response         = [aResponse toJSON],
-        attributes       = response[[self railsName]],
-        notificationName = [self className] + "ResourceDidLoad",
-        resource         = [self new];
+    var attributes = [aResponse toJSON]
+    // var attributes       = response[[self railsName]]
+
+    var klass;
+    if(attributes['type']) {
+      klass = attributes['type']
+    }else{
+      klass = [self className]
+    }
+
+    //todo support STI in notifications
+    var notificationName = [self className] + "ResourceDidLoad"
+    var resource         = [objj_getClass(klass) new];
 
     [resource setAttributes:attributes];
-    [[CPNotificationCenter defaultCenter] postNotificationName:notificationName object:resource];
+    [resource resourceHasLoaded]
+    [[CPNotificationCenter defaultCenter] postNotificationName:notificationName object:self];
     return resource;
 }
 
@@ -288,20 +328,27 @@ var defaultIdentifierKey = @"id",
 
 + (CPArray)collectionDidLoad:(CPString)aResponse
 {
-    var resourceArray    = [CPArray array],
-        notificationName = [self className] + "CollectionDidLoad";
+    var collection       = [aResponse toJSON]
+    var resourceArray    = [CPArray array]
+    var notificationName = [self className] + "CollectionDidLoad";
 
-    if ([[aResponse stringByTrimmingWhitespace] length] > 0) {
-        var collection = [aResponse toJSON];
+    for (var i = 0; i < collection.length; i++) {
+        var attributes = collection[i];
+        // var attributes = resource[[self railsName]];
 
-        for (var i = 0; i < collection.length; i++) {
-            var resource   = collection[i];
-            var attributes = resource[[self railsName]];
-            [resourceArray addObject:[self new:attributes]];
+        var klass;
+        if(attributes['type']) {
+          klass = attributes['type']
+        }else{
+          klass = [self className]
         }
-    }
 
-    [[CPNotificationCenter defaultCenter] postNotificationName:notificationName object:resourceArray];
+        var resource = [objj_getClass(klass) new:attributes];
+        [resource resourceHasLoaded]
+        [resourceArray addObject:resource];
+
+    }
+    [[CPNotificationCenter defaultCenter] postNotificationName:notificationName object:self];
     return resourceArray;
 }
 
@@ -331,13 +378,16 @@ var defaultIdentifierKey = @"id",
     return request;
 }
 
+//todo test
+- (CPString)toJSON{
+  return [CPString JSONFromObject:[self attributes]];
+}
+
+
 - (void)resourceDidSave:(CPString)aResponse
 {
-    if ([aResponse length] > 1)
-    {
-        var response    = [aResponse toJSON],
-            attributes  = response[[[self class] railsName]];
-    }
+    var attributes               = [aResponse toJSON];
+    // var attributes               = response[[[self class] railsName]]
     var abstractNotificationName = [self className] + "ResourceDidSave";
 
     if (identifier) {
@@ -347,6 +397,20 @@ var defaultIdentifierKey = @"id",
     }
 
     [self setAttributes:attributes];
+    [[CPNotificationCenter defaultCenter] postNotificationName:notificationName object:self];
+    [[CPNotificationCenter defaultCenter] postNotificationName:abstractNotificationName object:self];
+}
+
+- (void)resourceDidNotSaveConflicted:(CPString)aResponse
+{
+    var abstractNotificationName = [self className] + "ResourceDidNotSaveConflicted";
+    // TODO - do something with errors
+    if (identifier) {
+        var notificationName = [self className] + "ResourceDidNotUpdateConflicted";
+    } else {
+        var notificationName = [self className] + "ResourceDidNotCreateConflicted";
+    }
+
     [[CPNotificationCenter defaultCenter] postNotificationName:notificationName object:self];
     [[CPNotificationCenter defaultCenter] postNotificationName:abstractNotificationName object:self];
 }
@@ -388,4 +452,28 @@ var defaultIdentifierKey = @"id",
     [[CPNotificationCenter defaultCenter] postNotificationName:notificationName object:self];
 }
 
+-(BOOL)isEqual:(CappuccinoResource)other {
+  return ([self class] == [other class] && [self identifier] == [other identifier])
+}
+
+-(BOOL)isNewRecord{
+  return ([self identifier] == null ? YES : NO)
+}
+
+//todo only works one level :/
+-(CPString)baseClassName {
+  try {
+  if( class_getName([self superclass]) == 'CappuccinoResource')
+    return [self className]
+  return [super baseClassName]
+  }catch(e) {
+    return class_getName([self superclass])
+  }
+}
+
+-(CPString)toFlatJSON{
+  for(var key in [self attributes]){
+    return [CPString JSONFromObject:[self attributes][key]];
+  }
+}
 @end

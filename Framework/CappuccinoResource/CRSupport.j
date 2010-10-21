@@ -84,6 +84,25 @@
     return str;
 }
 
+- (CPString)camelcaseUnderscores
+{
+    var array  = self.split('_');
+    for (var x = 1; x < array.length; x++) // skip first word
+        array[x] = array[x].charAt(0).toUpperCase() +array[x].substring(1);
+    var string = array.join('');
+
+    return string;
+}
+
+- (CPString)classifiedString
+{
+    var string = [self camelcaseUnderscores]
+    var stripS  = new RegExp('s$');
+
+    var newStr = string.replace(stripS,'');
+    return newStr.charAt(0).toUpperCase() + newStr.substring(1);
+}
+
 /*
  * Cappuccino expects strings to be camelized with a lowercased first letter.
  * eg - userSession, movieTitle, createdAt, etc.
@@ -91,13 +110,8 @@
 */
 - (CPString)cappifiedString
 {
-    var string = self.charAt(0).toLowerCase() + self.substring(1);
-    var array  = string.split('_');
-    for (var x = 1; x < array.length; x++) // skip first word
-        array[x] = array[x].charAt(0).toUpperCase() +array[x].substring(1);
-    string = array.join('');
-
-    return string;
+    var string = [self camelcaseUnderscores]
+    return string.charAt(0).toLowerCase() + string.substring(1);
 }
 
 - (JSObject)toJSON
@@ -125,18 +139,18 @@
 {
     try {
         var request = new CFHTTPRequest();
- 
+
         request.open([aRequest HTTPMethod], [[aRequest URL] absoluteString], NO);
- 
+
         var fields = [aRequest allHTTPHeaderFields],
             key = nil,
             keys = [fields keyEnumerator];
- 
+
         while (key = [keys nextObject])
             request.setRequestHeader(key, [fields objectForKey:key]);
- 
+
         request.send([aRequest HTTPBody]);
- 
+
         return [CPArray arrayWithObjects:request.status(), request.responseText()];
      }
      catch (anException) {}
